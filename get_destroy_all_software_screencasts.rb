@@ -22,7 +22,7 @@ links.each do |hash|
   # Make destination DIR before running program
   download = open(extracted_video_link)
   abs_dir_to_save_files = ''
-  raise "PLEASE PROVIDE A DIR OR THIS MAY SAVE TO ROOT" unless abs_dir_to_save_files
+  raise "PLEASE PROVIDE A DIR OR THIS MAY SAVE TO ROOT" if abs_dir_to_save_files.empty?
   IO.copy_stream(download, "#{abs_dir_to_save_files}/#{hash[:name]}.mp4")
   puts "Saved!"
 end
