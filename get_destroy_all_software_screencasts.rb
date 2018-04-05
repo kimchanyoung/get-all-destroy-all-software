@@ -21,7 +21,8 @@ links.each do |hash|
   puts "Saving screencast #{hash[:name]}..."
   # Make destination DIR before running program
   download = open(extracted_video_link)
-  IO.copy_stream(download, "/Users/chan/Downloads/destroy_all_software/#{hash[:name]}.mp4")
+  abs_dir_to_save_files = ''
+  IO.copy_stream(download, "#{abs_dir_to_save_files}/#{hash[:name]}.mp4")
   puts "Saved!"
 end
 
