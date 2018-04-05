@@ -1,4 +1,3 @@
-require 'byebug'
 require 'nokogiri'
 require 'open-uri'
 # Get all links
