@@ -1,6 +1,17 @@
 require 'nokogiri'
 require 'open-uri'
-# Get all links
+
+abs_dir_to_save_files = ARGV[0]
+
+unless abs_dir_to_save_files
+  puts "Please supply a path to save downloads"
+  exit 1
+end
+
+unless File.exist?(abs_dir_to_save_files)
+  puts "Creating #{abs_dir_to_save_files}"
+  Dir.mkdir(abs_dir_to_save_files)
+end
 
 MAIN_PAGE = "https://www.destroyallsoftware.com"
 main_page = Nokogiri::HTML(open("#{MAIN_PAGE}/screencasts/catalog"))
@@ -12,19 +23,34 @@ links = main_page.css('.episode a').map do |e|
   { link: link, name: link.split("/").last }
 end
 
-links.each do |hash|
-  puts "Opening screencast #{hash[:name]}"
-  sub_page = Nokogiri::HTML(open("#{MAIN_PAGE}#{hash[:link]}"))
+links.each_slice(4) do |group|
+  group.map do |hash|
+    next if File.exist?("#{abs_dir_to_save_files}/#{hash[:name]}.mp4")
 
-  extracted_video_link = sub_page.css('script')[1].children.first.content.scan(/src = \"(.*)\"/).first.first # second for 1040
-  
-  puts "Saving screencast #{hash[:name]}..."
-  # Make destination DIR before running program
-  download = open(extracted_video_link)
-  abs_dir_to_save_files = ''
-  raise "PLEASE PROVIDE A DIR OR THIS MAY SAVE TO ROOT" if abs_dir_to_save_files.empty?
-  IO.copy_stream(download, "#{abs_dir_to_save_files}/#{hash[:name]}.mp4")
-  puts "Saved!"
+    Thread.new(abs_dir_to_save_files, hash) do
+      begin
+        puts "Opening screencast #{hash[:name]}"
+        sub_page = Nokogiri::HTML(open("#{MAIN_PAGE}#{hash[:link]}"))
+
+        extracted_video_link = sub_page.css('script')[1]
+          .children
+          .first
+          .content
+          .scan(/src = \"(.*)\"/)
+          .first
+          .first # second for 1040
+
+        puts "Saving screencast #{hash[:name]}..."
+        # Make destination DIR before running program
+        download = open(extracted_video_link)
+        IO.copy_stream(download, "#{abs_dir_to_save_files}/#{hash[:name]}.mp4")
+        puts "Saved #{hash[:name]}!"
+      rescue OpenURI::HTTPError => ex
+        puts "Errors downloading #{hash[:name]} - #{ex.inspect}"
+        next
+      end
+    end
+  end.compact.each(&:join)
 end
 
 puts "Done!"
