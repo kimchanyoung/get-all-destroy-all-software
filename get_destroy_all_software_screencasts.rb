@@ -42,7 +42,7 @@ links.each_slice(4) do |group|
 
         puts "Saving screencast #{hash[:name]}..."
         # Make destination DIR before running program
-        download = open(extracted_video_link)
+        download = open("#{MAIN_PAGE}#{extracted_video_link}")
         IO.copy_stream(download, "#{abs_dir_to_save_files}/#{hash[:name]}.mp4")
         puts "Saved #{hash[:name]}!"
       rescue OpenURI::HTTPError => ex
